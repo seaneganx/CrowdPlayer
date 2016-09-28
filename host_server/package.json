@@ -1,0 +1,15 @@
+{
+  "name": "crowdplayer_server",
+  "version": "1.0.0",
+  "scripts": {
+    "mongodevstart": "mongod --config mongod-dev.conf"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "mongoose": "^4.6.1"
+  },
+  "devDependencies": {},
+  "author": "",
+  "license": "ISC",
+  "description": "A music control platform, which allows many users to vote for the ordering of the host's songs located in a playlist queue."
+}
