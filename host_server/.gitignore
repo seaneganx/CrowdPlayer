@@ -1,3 +1,0 @@
-node_modules/
-mongodb_data/*
-!mongodb_data/.keep
