@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">CrowdPlayer</string>
+    <string name="select_song">OK</string>
+    <string name="nah">Nah</string>
+</resources>
