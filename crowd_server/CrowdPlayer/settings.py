@@ -25,12 +25,16 @@ SECRET_KEY = 't%0@@vxk^1k)b(@fozyc2ob#zew2!k)&wakib^z7eadsud$$d%'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '192.168.100.118',
+]
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'crowd_control.apps.CrowdControlConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -108,7 +112,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Canada/Central'
 
 USE_I18N = True
 
