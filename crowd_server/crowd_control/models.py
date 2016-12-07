@@ -12,6 +12,22 @@ class Host(models.Model):
 		max_length=64
 	)
 
+	# spotify auth token information shouldn't be shown on forms
+	spotify_access_token = models.CharField(
+		'Spotify Web API Access Token',
+		max_length=128
+	)
+
+	spotify_access_expiry = models.DateTimeField(
+		'Spotify Access Token Expiry Date',
+		default=timezone.now
+	)
+
+	spotify_refresh_token = models.CharField(
+		'Spotify Web API Refresh Token',
+		max_length=128
+	)
+
 	# other host information
 	reg_date = models.DateTimeField(
 		'Registration Date',
