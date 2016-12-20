@@ -9,7 +9,8 @@ class Host(models.Model):
 	# every host is attached to a spotify account
 	spotify_id = models.CharField(
 		'Spotify user ID',
-		max_length=64
+		max_length=64,
+		primary_key=True
 	)
 
 	# spotify auth token information shouldn't be shown on forms
@@ -90,6 +91,7 @@ class Track(models.Model):
 	# every track needs to exist inside a room
 	room = models.ForeignKey(
 		Room,
+		related_name='tracks',
 		on_delete=models.CASCADE
 	)
 
@@ -119,6 +121,15 @@ class Track(models.Model):
 		'Vote Count',
 		default=0
 	)
+
+	date_added = models.DateTimeField(
+		'Date Added',
+		default=timezone.now
+	)
+
+	class Meta:
+		unique_together = ('spotify_id', 'room')
+		ordering = ['-vote_count', 'date_added']
 
 	def __str__(self):
 		return "{artist} - {track} ({votes})".format(
