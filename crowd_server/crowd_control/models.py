@@ -61,13 +61,13 @@ class Room(models.Model):
 	def get_next_track(self):
 
 		# there is no next track if there are no tracks in the room
-		track_set = self.track_set
-		if track_set.count() == 0:
+		tracks = self.tracks
+		if tracks.count() == 0:
 			return None
 
 		# find the tracks with the most votes
-		max_votes = track_set.aggregate(Max('vote_count'))['vote_count__max']
-		top_tracks = track_set.filter(vote_count=max_votes)
+		max_votes = tracks.aggregate(Max('vote_count'))['vote_count__max']
+		top_tracks = tracks.filter(vote_count=max_votes)
 
 		# find the oldest track in the top_tracks queryset
 		min_id = top_tracks.aggregate(Min('id'))['id__min']
@@ -78,7 +78,7 @@ class Room(models.Model):
 	def get_track_queue(self):
 
 		# sort the tracks by vote count, with oldest track ID at the top
-		return self.track_set.order_by('-vote_count', 'id')
+		return self.tracks.order_by('-vote_count', 'id')
 
 	def __str__(self):
 		return "{host}'s Room ({id})".format(
