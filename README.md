@@ -7,7 +7,7 @@ It enables hosts to create a playlist based on a selection of music from Spotify
 Voters can connect to the room from their favourite mobile browser, then vote on songs available in the song queue, and even request for songs to be added to the song queue! The song with the highest number of votes at the time of song change will be played next.
 
 ---
-### Feature List:
+### Project Overview:
 
 ##### Host Device (Android / iOS App)
 - Link your Spotify Premium account to play music directly from Spotify!
@@ -35,47 +35,75 @@ Voters can connect to the room from their favourite mobile browser, then vote on
 	- Hosts have much more power, including song addition/removal and song order adjustment
 
 ---
-### Todo:
+### API Endpoints
 
-##### 1. Web server and API
+##### Rooms
+|  Method  |  Endpoint  | Usage  |  Returns  |
+| -------- | ---------- | ----------- | --------- |
+| POST | /v1/rooms/create | Create a room | `room_id` |
+| GET | /v1/rooms/`room_id` | Get a room | Room |
+| GET | /v1/rooms/`room_id`/playing | Get playing track info | Track |
+| GET | /v1/rooms/`room_id`/requests | Get list of track requests | Tracks |
+| DELETE | /v1/rooms/`room_id`/destroy | Destroy a room | - |
+
+##### Queues
+|  Method  |  Endpoint  |  Usage  |  Returns  |
+| -------- | ---------- | ------- | --------- |
+| POST | /v1/queues/`room_id`/add/`track_id` | Add/Request a track | - |
+| GET | /v1/queues/`room_id` | View queue | Tracks |
+| PUT | /v1/queues/`room_id`/vote/`track_id` | Like/Unlike a track | - |
+| DELETE | /v1/queues/`room_id`/remove/`track_id` | Remove a track | - |
+
+
+---
+### Phase One (Basics):
+
+##### 1.1. Web server and API
 - Endpoints to control basic operations of the app
 	- Vote, view room queue, etc.
 - Authentication design for voters and hosts
 	- How can we prevent malicious voters from taking control of the song queue?
 	- How do we verify requests from hosts or voters?
 
-##### 2. Voter website (mobile web app)
+##### 1.2. Song requests
+- Endpoints for voters to request songs in a given room, and for hosts to see requests
+- App must be able to search the entire Spotify library in a reasonable way on the front-end
+- Hosts must be able to reject or approve song requests
+
+##### 2.1 Voter website (mobile web app)
 - Make a pretty mobile interface with song listing and a vote button
 - Display current song information
 - Potentially make a song progress slider
 
-##### 3. iOS / Android apps
+##### 2.2 Song request interface
+- Allow users to search for songs in the Spotify library
+	- Search by artist, album, track
+
+##### 3.1. iOS / Android apps
 - Hopefully these can be done in parallel using some fancy mobile app design methods that I clearly haven't researched yet, and may or may not exist
 
-##### 3.5. Custom flow for Spotify OAuth on host devices
+##### 3.2. Custom flow for Spotify OAuth on host devices
 - Spotify Android/iOS SDK doesn't receive refresh tokens during the standard OAuth flow
 	- Solution found here: https://github.com/spotify/android-sdk/issues/10
 - I have to send the authorizaton code to the server where I can request an access token together with a refresh token
 - The access token, refresh token, and access token expiry date will be stored in the server database
 - The alternative is having a 3600 second (one hour) expiry on the authorizaton, which requires the host to log into Spotify again (lame) on their phone to refresh the token
 
-##### 4. Song requests
-- Endpoints for voters to request songs in a given room, and for hosts to see requests
-- App must be able to search the entire Spotify library in a reasonable way on the front-end
-- Hosts must be able to reject or approve song requests
+### Phase Two (Bonus features)
 
-##### 5. Personal library support
+##### 1. Host user registration
+- Securely verify whether a potential host is a robot (highly unlikely with Google Play / Spotify accounts)
+- Remove required link to Spotify Premium account
+
+##### 2. Personal library support
 - Specific communication with the server regarding the type of song being listed (Spotify vs. Local)
 - Ability to play music files off the host's device rather than Spotify player
 
-##### 6. Host user registration
-- Securely verify whether a potential host is a robot
-- Remove required link to Spotify Premium account
-
-##### 7. Customized shared library
+##### 3. Customized shared library
 - Host can whitelist / blacklist songs, artists, and albums
 - Voters will only be able to request songs from the available library
 
+---
 ### Decisions:
 - How should the front-end be written?
 	- Django templates?
