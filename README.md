@@ -40,19 +40,19 @@ Voters can connect to the room from their favourite mobile browser, then vote on
 ##### Rooms
 |  Method  |  Endpoint  | Usage  |  Returns  |
 | -------- | ---------- | ----------- | --------- |
-| POST | /v1/rooms/create | Create a room | `room_id` |
-| GET | /v1/rooms/`room_id` | Get a room | Room |
-| GET | /v1/rooms/`room_id`/playing | Get playing track info | Track |
-| GET | /v1/rooms/`room_id`/requests | Get list of track requests | Tracks |
-| DELETE | /v1/rooms/`room_id`/destroy | Destroy a room | - |
+| POST | /api/rooms/create | Create a room | `room_id` |
+| GET | /api/rooms/`room_id` | Get a room's info | Room |
+| DELETE | /api/rooms/`room_id` | Destroy a room | - |
+| GET | /api/rooms/`room_id`/playing | Get playing track info | Track |
+| GET | /api/rooms/`room_id`/requests | Get list of track requests | Tracks |
 
 ##### Queues
 |  Method  |  Endpoint  |  Usage  |  Returns  |
 | -------- | ---------- | ------- | --------- |
-| POST | /v1/queues/`room_id`/add/`track_id` | Add/Request a track | - |
-| GET | /v1/queues/`room_id` | View queue | Tracks |
-| PUT | /v1/queues/`room_id`/vote/`track_id` | Like/Unlike a track | - |
-| DELETE | /v1/queues/`room_id`/remove/`track_id` | Remove a track | - |
+| GET | /api/queues/`room_id` | View queue | Tracks |
+| POST | /api/queues/`room_id`/`track_id` | Add/Request a track | - |
+| PUT | /api/queues/`room_id`/`track_id` | Like/Unlike a track | - |
+| DELETE | /api/queues/`room_id`/`track_id` | Remove a track | - |
 
 
 ---
