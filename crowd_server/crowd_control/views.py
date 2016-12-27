@@ -1,45 +1,46 @@
-from django.shortcuts import render
-from django.http import HttpResponse
-
 from rest_framework import status
-from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from crowd_control.models import Host, Room, Track
+import random
 
-# Create your views here.
-def index(request):
-	return HttpResponse("CrowdPlayer is currently in development.")
+class RoomCreation(APIView):
 
-@api_view(['POST'])
-def create_room(request):
+	def post(self, request):
 
-	if request.method == 'POST':
-		return Response("POST /api/rooms/create/", status=status.HTTP_501_NOT_IMPLEMENTED)
+		# simple room generation for development
+		adjectives = ['Gleaming', 'Junior', 'Stupendous', 'Studious', 'Cold', 'Experienced', 'Circular', 'Determined', 'Serious', 'Friendly', 'Thrifty', 'Oblong', 'Dreary', 'Decent', 'Beneficial', 'Silver', 'Splendid', 'Dreary', 'Juvenile', 'Phony', 'Black', 'Excitable', 'All', 'Threadbare', 'Farflung']
+		animals = ['Lizard', 'Jackal', 'Yaffle', 'Pheasant', 'Cattle', 'Amoeba', 'Nandoo', 'JapaneseBeetle', 'Goa', 'Leafbird', 'Tahr', 'AfricanHarrierHawk', 'QueenslandHeeler', 'Gadwall', 'NeonBlueHermitCrab', 'AmericanBulldog', 'Silkworm', 'Mollusk', 'RhodesianRidgeback', 'Kangaroo', 'BlackMamba', 'IberianMidwifeToad', 'Cranefly', 'Wolf', 'Scaup']
 
-@api_view(['GET', 'DELETE'])
-def room_request(request, room_id):
+		# generate a room name
+		room_name = "{adjective1}{adjective2}{animal}".format(
+			adjective1=random.choice(adjectives),
+			adjective2=random.choice(adjectives),
+			animal=random.choice(animals)
+		)
 
-	if request.method == 'GET':
-		return Response("GET /api/rooms/{room_id})".format(room_id=room_id), status=status.HTTP_501_NOT_IMPLEMENTED)
+		return Response(room_name)
 
-	elif request.method == 'DELETE':
-		return Response("DELETE /api/rooms/{room_id})".format(room_id=room_id), status=status.HTTP_501_NOT_IMPLEMENTED)
+class RoomRequest(APIView):
 
-@api_view(['GET'])
-def read_queue(request, room_id):
+	def get(self, request, room_id):
+		return Response("GET /api/rooms/{room_id}".format(room_id=room_id), status=status.HTTP_501_NOT_IMPLEMENTED)
 
-	if request.method == 'GET':
-		return Response("GET /api/queues/{room_id})".format(room_id=room_id), status=status.HTTP_501_NOT_IMPLEMENTED)
+	def delete(self, request, room_id):
+		return Response("DELETE /api/rooms/{room_id}".format(room_id=room_id), status=status.HTTP_501_NOT_IMPLEMENTED)
 
-@api_view(['POST', 'PUT', 'DELETE'])
-def queue_request(request, room_id, track_id):
+class QueueRead(APIView):
 
-	if request.method == 'POST':
-		return Response("POST /api/queues/{room_id}/{track_id})".format(room_id=room_id, track_id=track_id), status=status.HTTP_501_NOT_IMPLEMENTED)
+	def get(self, request, room_id):
+		return Response("GET /api/queues/{room_id}".format(room_id=room_id), status=status.HTTP_501_NOT_IMPLEMENTED)
 
-	elif request.method == 'PUT':
-		return Response("PUT /api/queues/{room_id}/{track_id})".format(room_id=room_id, track_id=track_id), status=status.HTTP_501_NOT_IMPLEMENTED)
+class QueueRequest(APIView):
 
-	elif request.method == 'DELETE':
-		return Response("DELETE /api/queues/{room_id}/{track_id})".format(room_id=room_id, track_id=track_id), status=status.HTTP_501_NOT_IMPLEMENTED)
+	def post(self, request, room_id, track_id):
+		return Response("POST /api/queues/{room_id}/{track_id}".format(room_id=room_id, track_id=track_id), status=status.HTTP_501_NOT_IMPLEMENTED)
+
+	def put(self, request, room_id, track_id):
+		return Response("PUT /api/queues/{room_id}/{track_id}".format(room_id=room_id, track_id=track_id), status=status.HTTP_501_NOT_IMPLEMENTED)
+
+	def delete(self, request, room_id, track_id):
+		return Response("DELETE /api/queues/{room_id}/{track_id}".format(room_id=room_id, track_id=track_id), status=status.HTTP_501_NOT_IMPLEMENTED)

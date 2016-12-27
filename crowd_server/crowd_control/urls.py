@@ -13,12 +13,9 @@ track_param = "(?P<{param_name}>{track_regex})".format(
 )
 
 urlpatterns = [
-	url(r'^$', views.index, name='index'),
+	url(r'^rooms/create$', views.RoomCreation.as_view()),
+	url(r'^rooms/{room_param}$'.format(room_param=room_param), views.RoomRequest.as_view()),
 
-	url(r'^rooms/create$', views.create_room),
-	url(r'^rooms/{room_param}$'.format(room_param=room_param), views.room_request),
-
-	url(r'^queues/{room_param}$'.format(room_param=room_param), views.read_queue),
-	url(r'^queues/{room_param}/{track_param}$'.format(room_param=room_param, track_param=track_param), views.queue_request
-	),
+	url(r'^queues/{room_param}$'.format(room_param=room_param), views.QueueRead.as_view()),
+	url(r'^queues/{room_param}/{track_param}$'.format(room_param=room_param, track_param=track_param), views.QueueRequest.as_view()),
 ]
