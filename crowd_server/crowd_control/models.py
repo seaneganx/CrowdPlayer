@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models import Min, Max
 
 from django.utils import timezone
+from django.conf import settings
 
 from rest_framework.authtoken.models import Token
 from django.db.models.signals import post_save
@@ -12,8 +13,15 @@ from django.dispatch import receiver
 def create_auth_token(sender, instance=None, created=False, **kwargs):
 	if created:
 		Token.objects.create(user=instance)
-# Create your models here.
-class Host(models.Model):
+
+class HostDetail(models.Model):
+
+	# every host is a django user
+	user = models.OneToOneField(
+		settings.AUTH_USER_MODEL,
+		on_delete=models.CASCADE,
+		primary_key=True,
+	)
 
 	# every host is attached to a spotify account
 	spotify_id = models.CharField(
@@ -35,13 +43,6 @@ class Host(models.Model):
 
 	spotify_refresh_token = models.CharField(
 		'Spotify Web API Refresh Token',
-		max_length=128
-	)
-
-	# other host information
-	reg_date = models.DateTimeField(
-		'Registration Date',
-		default=timezone.now
 	)
 
 	def __str__(self):
@@ -51,7 +52,7 @@ class Room(models.Model):
 
 	# every room is attached to a host
 	host = models.OneToOneField(
-		Host,
+		HostDetail,
 		on_delete=models.CASCADE
 	)
 
@@ -146,3 +147,19 @@ class Track(models.Model):
 			track=self.track_name,
 			votes=self.vote_count
 		)
+
+class VoterDetail(models.Model):
+
+	# every voter is a django user
+	user = models.OneToOneField(
+		settings.AUTH_USER_MODEL,
+		on_delete=models.CASCADE,
+		primary_key=True,
+	)
+
+	# every voter is attached to a room
+	room = models.ForeignKey(
+		Room,
+		related_name='voters',
+		on_delete=models.CASCADE,
+	)
