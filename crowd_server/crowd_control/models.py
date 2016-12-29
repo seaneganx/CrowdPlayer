@@ -2,37 +2,45 @@ from django.db import models
 from django.db.models import Min, Max
 
 from django.utils import timezone
+from django.conf import settings
 
-# Create your models here.
-class Host(models.Model):
+from rest_framework.authtoken.models import Token
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+	if created:
+		Token.objects.create(user=instance)
+
+class HostDetail(models.Model):
+
+	# every host is a django user
+	user = models.OneToOneField(
+		settings.AUTH_USER_MODEL,
+		on_delete=models.CASCADE,
+		primary_key=True,
+	)
 
 	# every host is attached to a spotify account
 	spotify_id = models.CharField(
 		'Spotify user ID',
 		max_length=64,
-		primary_key=True
 	)
 
-	# spotify auth token information shouldn't be shown on forms
 	spotify_access_token = models.CharField(
 		'Spotify Web API Access Token',
-		max_length=128
+		max_length=256,
 	)
 
 	spotify_access_expiry = models.DateTimeField(
 		'Spotify Access Token Expiry Date',
-		default=timezone.now
 	)
 
 	spotify_refresh_token = models.CharField(
 		'Spotify Web API Refresh Token',
-		max_length=128
-	)
-
-	# other host information
-	reg_date = models.DateTimeField(
-		'Registration Date',
-		default=timezone.now
+		max_length=256,
 	)
 
 	def __str__(self):
@@ -42,20 +50,20 @@ class Room(models.Model):
 
 	# every room is attached to a host
 	host = models.OneToOneField(
-		Host,
-		on_delete=models.CASCADE
+		HostDetail,
+		on_delete=models.CASCADE,
 	)
 
 	# other room information
 	room_name = models.CharField(
 		'Room Name',
 		max_length=32,
-		primary_key=True
+		primary_key=True,
 	)
 
 	creation_date = models.DateTimeField(
 		'Creation Date',
-		default=timezone.now
+		default=timezone.now,
 	)
 
 	def get_next_track(self):
@@ -83,7 +91,7 @@ class Room(models.Model):
 	def __str__(self):
 		return "{host}'s Room ({id})".format(
 			host=self.host.spotify_id,
-			id=self.room_name
+			id=self.room_name,
 		)
 
 class Track(models.Model):
@@ -92,39 +100,39 @@ class Track(models.Model):
 	room = models.ForeignKey(
 		Room,
 		related_name='tracks',
-		on_delete=models.CASCADE
+		on_delete=models.CASCADE,
 	)
 
 	# other track information
 	spotify_id = models.CharField(
 		'Spotify track ID',
-		max_length=64
+		max_length=64,
 	)
 
 	artist_name = models.CharField(
 		'Artist Name',
-		max_length=64
+		max_length=64,
 	)
 	track_name = models.CharField(
 		'Track Name',
-		max_length=64
+		max_length=64,
 	)
 	album_name = models.CharField(
 		'Album Name',
-		max_length=64
+		max_length=64,
 	)
 	track_length_ms = models.IntegerField(
-		'Track Length (ms)'
+		'Track Length (ms)',
 	)
 
 	vote_count = models.IntegerField(
 		'Vote Count',
-		default=0
+		default=0,
 	)
 
 	date_added = models.DateTimeField(
 		'Date Added',
-		default=timezone.now
+		default=timezone.now,
 	)
 
 	class Meta:
@@ -135,5 +143,21 @@ class Track(models.Model):
 		return "{artist} - {track} ({votes})".format(
 			artist=self.artist_name,
 			track=self.track_name,
-			votes=self.vote_count
+			votes=self.vote_count,
 		)
+
+class VoterDetail(models.Model):
+
+	# every voter is a django user
+	user = models.OneToOneField(
+		settings.AUTH_USER_MODEL,
+		on_delete=models.CASCADE,
+		primary_key=True,
+	)
+
+	# every voter is attached to a room
+	room = models.ForeignKey(
+		Room,
+		related_name='voters',
+		on_delete=models.CASCADE,
+	)
