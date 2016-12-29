@@ -14,7 +14,7 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
 	if created:
 		Token.objects.create(user=instance)
 
-class HostDetail(models.Model):
+class Host(models.Model):
 
 	# every host is a django user
 	user = models.OneToOneField(
@@ -27,11 +27,13 @@ class HostDetail(models.Model):
 	spotify_id = models.CharField(
 		'Spotify user ID',
 		max_length=64,
+		unique=True,
 	)
 
 	spotify_access_token = models.CharField(
 		'Spotify Web API Access Token',
-		max_length=256,
+		max_length=255,
+		unique=True,
 	)
 
 	spotify_access_expiry = models.DateTimeField(
@@ -40,7 +42,8 @@ class HostDetail(models.Model):
 
 	spotify_refresh_token = models.CharField(
 		'Spotify Web API Refresh Token',
-		max_length=256,
+		max_length=255,
+		unique=True,
 	)
 
 	def __str__(self):
@@ -50,7 +53,7 @@ class Room(models.Model):
 
 	# every room is attached to a host
 	host = models.OneToOneField(
-		HostDetail,
+		Host,
 		on_delete=models.CASCADE,
 	)
 
@@ -146,7 +149,7 @@ class Track(models.Model):
 			votes=self.vote_count,
 		)
 
-class VoterDetail(models.Model):
+class Voter(models.Model):
 
 	# every voter is a django user
 	user = models.OneToOneField(
