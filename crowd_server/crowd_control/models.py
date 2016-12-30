@@ -92,10 +92,7 @@ class Room(models.Model):
 		return self.tracks.order_by('-vote_count', 'id')
 
 	def __str__(self):
-		return "{host}'s Room ({id})".format(
-			host=self.host.spotify_id,
-			id=self.room_name,
-		)
+		return self.room_name
 
 class Track(models.Model):
 
@@ -164,3 +161,42 @@ class Voter(models.Model):
 		related_name='voters',
 		on_delete=models.CASCADE,
 	)
+
+	# every voter can vote on multiple tracks
+	tracks = models.ManyToManyField(
+		Track,
+		through='TrackVote',
+		through_fields=('voter', 'track'),
+	)
+
+	def __str__(self):
+		return "{short_token} ({room})".format(
+			room=self.room.room_name,
+			short_token=str(self.user.auth_token)[:6],
+		)
+
+class TrackVote(models.Model):
+
+	# every vote must have a track being voted on
+	track = models.ForeignKey(
+		Track,
+		on_delete=models.CASCADE,
+	)
+
+	# every vote must have a voter who cast it
+	voter = models.ForeignKey(
+		Voter,
+		on_delete=models.CASCADE,
+	)
+
+	# other vote info
+	date_cast = models.DateTimeField(
+		'Date Cast',
+		default=timezone.now,
+	)
+
+	def __str__(self):
+		return "{voter} | {track}".format(
+			voter=self.voter,
+			track=self.track,
+		)
