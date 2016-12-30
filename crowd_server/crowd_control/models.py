@@ -14,7 +14,7 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
 	if created:
 		Token.objects.create(user=instance)
 
-class HostDetail(models.Model):
+class Host(models.Model):
 
 	# every host is a django user
 	user = models.OneToOneField(
@@ -27,11 +27,13 @@ class HostDetail(models.Model):
 	spotify_id = models.CharField(
 		'Spotify user ID',
 		max_length=64,
+		unique=True,
 	)
 
 	spotify_access_token = models.CharField(
 		'Spotify Web API Access Token',
-		max_length=256,
+		max_length=255,
+		unique=True,
 	)
 
 	spotify_access_expiry = models.DateTimeField(
@@ -40,7 +42,8 @@ class HostDetail(models.Model):
 
 	spotify_refresh_token = models.CharField(
 		'Spotify Web API Refresh Token',
-		max_length=256,
+		max_length=255,
+		unique=True,
 	)
 
 	def __str__(self):
@@ -50,12 +53,12 @@ class Room(models.Model):
 
 	# every room is attached to a host
 	host = models.OneToOneField(
-		HostDetail,
+		Host,
 		on_delete=models.CASCADE,
 	)
 
 	# other room information
-	room_name = models.CharField(
+	name = models.CharField(
 		'Room Name',
 		max_length=32,
 		primary_key=True,
@@ -89,10 +92,7 @@ class Room(models.Model):
 		return self.tracks.order_by('-vote_count', 'id')
 
 	def __str__(self):
-		return "{host}'s Room ({id})".format(
-			host=self.host.spotify_id,
-			id=self.room_name,
-		)
+		return self.name
 
 class Track(models.Model):
 
@@ -146,7 +146,7 @@ class Track(models.Model):
 			votes=self.vote_count,
 		)
 
-class VoterDetail(models.Model):
+class Voter(models.Model):
 
 	# every voter is a django user
 	user = models.OneToOneField(
@@ -161,3 +161,42 @@ class VoterDetail(models.Model):
 		related_name='voters',
 		on_delete=models.CASCADE,
 	)
+
+	# every voter can vote on multiple tracks
+	tracks = models.ManyToManyField(
+		Track,
+		through='TrackVote',
+		through_fields=('voter', 'track'),
+	)
+
+	def __str__(self):
+		return "{short_token} ({room})".format(
+			room=self.room.name,
+			short_token=str(self.user.auth_token)[:6],
+		)
+
+class TrackVote(models.Model):
+
+	# every vote must have a track being voted on
+	track = models.ForeignKey(
+		Track,
+		on_delete=models.CASCADE,
+	)
+
+	# every vote must have a voter who cast it
+	voter = models.ForeignKey(
+		Voter,
+		on_delete=models.CASCADE,
+	)
+
+	# other vote info
+	date_cast = models.DateTimeField(
+		'Date Cast',
+		default=timezone.now,
+	)
+
+	def __str__(self):
+		return "{voter} | {track}".format(
+			voter=self.voter,
+			track=self.track,
+		)
