@@ -58,7 +58,7 @@ class Room(models.Model):
 	)
 
 	# other room information
-	room_name = models.CharField(
+	name = models.CharField(
 		'Room Name',
 		max_length=32,
 		primary_key=True,
@@ -92,7 +92,7 @@ class Room(models.Model):
 		return self.tracks.order_by('-vote_count', 'id')
 
 	def __str__(self):
-		return self.room_name
+		return self.name
 
 class Track(models.Model):
 
@@ -171,7 +171,7 @@ class Voter(models.Model):
 
 	def __str__(self):
 		return "{short_token} ({room})".format(
-			room=self.room.room_name,
+			room=self.room.name,
 			short_token=str(self.user.auth_token)[:6],
 		)
 
