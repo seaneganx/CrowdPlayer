@@ -1,8 +1,14 @@
-from rest_framework import status
+from rest_framework import status, permissions
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 import random
+
+class HostPermission(permissions.BasePermission):
+
+	def has_permission(self, request, view):
+		return hasattr(request.user, 'host')
 
 class RoomCreation(APIView):
 
