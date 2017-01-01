@@ -1,6 +1,6 @@
 from django.conf.urls import url
 
-from . import views
+from crowd_control import views
 
 # define the names of each URL parameter, and limit the format using regex
 room_param = "(?P<{param_name}>{room_regex})".format(
