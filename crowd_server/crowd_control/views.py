@@ -68,7 +68,20 @@ class RoomRequest(APIView):
 		return Response(serializer.data, status=status.HTTP_200_OK)
 
 	def delete(self, request, room_id):
-		return Response("DELETE /api/rooms/{room_id}".format(room_id=room_id), status=status.HTTP_501_NOT_IMPLEMENTED)
+
+		# retrieve the requested room from the database
+		try:
+			room = Room.objects.get(pk=room_id)
+		except Room.DoesNotExist:
+			return Response("The room {room} could not be found.".format(room=room_id), status=status.HTTP_404_NOT_FOUND)
+
+		# save the room name before we delete, then delete all related data
+		# tracks, voters, and votes that are related to this room all cascade upon room deletion
+		room_name = room.name
+		room.delete()
+
+		return Response("The room {room} and its related data were successfully deleted.".format(room=room_name), status=status.HTTP_200_OK)
+
 
 class QueueRead(APIView):
 
