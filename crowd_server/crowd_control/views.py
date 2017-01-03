@@ -3,7 +3,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db import IntegrityError
-from crowd_control import models, serializers
+
+from crowd_control.models import Room
+from crowd_control.serializers import RoomSerializer
 
 import random
 
@@ -34,7 +36,7 @@ class RoomCreation(APIView):
 		)
 
 		# create a room linked to the current host and room name
-		room = models.Room(
+		room = Room(
 			name=room_name,
 			host=host,
 		)
@@ -46,7 +48,7 @@ class RoomCreation(APIView):
 			return Response("{user} is already hosting a room.".format(user=host), status=status.HTTP_400_BAD_REQUEST)
 
 		# serialize and return the room data
-		serializer = serializers.RoomSerializer(room)
+		serializer = RoomSerializer(room)
 		return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class RoomRequest(APIView):
