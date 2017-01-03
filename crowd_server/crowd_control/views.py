@@ -54,7 +54,16 @@ class RoomCreation(APIView):
 class RoomRequest(APIView):
 
 	def get(self, request, room_id):
-		return Response("GET /api/rooms/{room_id}".format(room_id=room_id), status=status.HTTP_501_NOT_IMPLEMENTED)
+
+		# retrieve the requested room from the database
+		try:
+			room = Room.objects.get(pk=room_id)
+		except Room.DoesNotExist:
+			return Response("The room {room} could not be found.".format(room=room_id), status=status.HTTP_404_NOT_FOUND)
+
+		# serialize the room information and send the response
+		serializer = RoomSerializer(room)
+		return Response(serializer.data, status=status.HTTP_200_OK)
 
 	def delete(self, request, room_id):
 		return Response("DELETE /api/rooms/{room_id}".format(room_id=room_id), status=status.HTTP_501_NOT_IMPLEMENTED)
