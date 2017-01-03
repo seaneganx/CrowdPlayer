@@ -5,14 +5,16 @@ from django.db import IntegrityError
 
 from crowd_control.models import Room
 from crowd_control.serializers import RoomSerializer
-from crowd_control.permissions import HostPermission
+from crowd_control.permissions import IsHost, IsHostOrReadOnly
+from rest_framework.permissions import IsAuthenticated
 
 import random
 
 class RoomCreation(APIView):
 
 	permission_classes = (
-		HostPermission,
+		IsAuthenticated,
+		IsHost,
 	)
 
 	def post(self, request):
@@ -47,6 +49,11 @@ class RoomCreation(APIView):
 		return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class RoomRequest(APIView):
+
+	permission_classes = (
+		IsAuthenticated,
+		IsHostOrReadOnly,
+	)
 
 	def get(self, request, room_id):
 
