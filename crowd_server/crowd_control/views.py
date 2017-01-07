@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from django.db import IntegrityError
 
 from crowd_control.models import Room
-from crowd_control.serializers import RoomSerializer
+from crowd_control.serializers import RoomSerializer, QueueSerializer
 from crowd_control.permissions import IsHost, IsHostOrReadOnly
 from rest_framework.permissions import IsAuthenticated
 
@@ -82,11 +82,19 @@ class RoomRequest(APIView):
 
 		return Response("The room {room} and its related data were successfully deleted.".format(room=room_name), status=status.HTTP_200_OK)
 
-
 class QueueRead(APIView):
 
 	def get(self, request, room_id):
-		return Response("GET /api/queues/{room_id}".format(room_id=room_id), status=status.HTTP_501_NOT_IMPLEMENTED)
+
+		# retrieve the requested room from the database
+		try:
+			room = Room.objects.get(pk=room_id)
+		except Room.DoesNotExist:
+			return Response("The room {room} could not be found.".format(room=room_id), status=status.HTTP_404_NOT_FOUND)
+
+		# serialize the track queue and send the response
+		serializer = QueueSerializer(room)
+		return Response(serializer.data, status=status.HTTP_200_OK)
 
 class QueueRequest(APIView):
 
