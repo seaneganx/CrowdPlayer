@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db import IntegrityError
 
-from crowd_control.models import Room, Track
+from crowd_control.models import Room, Track, TrackVote
 from crowd_control.serializers import RoomSerializer, QueueSerializer, TrackSerializer
 from crowd_control.permissions import IsHost, IsHostOrReadOnly
 from rest_framework.permissions import IsAuthenticated
@@ -163,3 +163,39 @@ class QueueUpdate(APIView):
 		track.delete()
 
 		return Response("The track {name} and its votes were successfully deleted.".format(name=track_str), status=status.HTTP_200_OK)
+
+class QueueVote(APIView):
+
+	def put(self, request, room_id, track_id, like_status):
+
+		# determine the score for this vote
+		if like_status == "like":
+			like_score = 1
+		else:
+			like_score = 0
+
+		# retrieve the requested track from the database
+		try:
+			room = Room.objects.get(pk=room_id)
+			track = room.tracks.get(spotify_id=track_id)
+		except Room.DoesNotExist:
+			return Response("The room {room} could not be found.".format(room=room_id), status=status.HTTP_404_NOT_FOUND)
+		except Track.DoesNotExist:
+			return Response("The track {id} could not be found in {room}.".format(id=track_id, room=room_id), status=status.HTTP_404_NOT_FOUND)
+
+		# create an entry for the vote in the database, otherwise update the existing entry
+		vote, newly_created = TrackVote.objects.update_or_create(
+
+			# these are the only things we want to search in our get()
+			voter=request.user.voter,
+			track=track,
+
+			# these will be used in addition to the others during creation of the object
+			defaults={
+				'score': like_score,
+			},
+		)
+
+		# serialize the track information and send the response
+		serializer = TrackSerializer(track)
+		return Response(serializer.data, status=status.HTTP_200_OK)
