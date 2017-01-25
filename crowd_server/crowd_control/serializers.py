@@ -40,7 +40,6 @@ class TrackSerializer(serializers.ModelSerializer):
 			'track_name',
 			'album_name',
 			'track_length_ms',
-			'vote_count',
 			'date_added',
 		)
 
