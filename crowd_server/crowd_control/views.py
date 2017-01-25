@@ -3,12 +3,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db import IntegrityError
 
-from crowd_control.models import Room
-from crowd_control.serializers import RoomSerializer, QueueSerializer
+from crowd_control.models import Room, Track
+from crowd_control.serializers import RoomSerializer, QueueSerializer, TrackSerializer
 from crowd_control.permissions import IsHost, IsHostOrReadOnly
 from rest_framework.permissions import IsAuthenticated
 
-import random
+import random, requests
 
 class RoomCreation(APIView):
 
@@ -96,13 +96,58 @@ class QueueRead(APIView):
 		serializer = QueueSerializer(room)
 		return Response(serializer.data, status=status.HTTP_200_OK)
 
-class QueueRequest(APIView):
+class QueueUpdate(APIView):
+
+	permission_classes = (
+		IsAuthenticated,
+		IsHost,
+	)
 
 	def post(self, request, room_id, track_id):
-		return Response("POST /api/queues/{room_id}/{track_id}".format(room_id=room_id, track_id=track_id), status=status.HTTP_501_NOT_IMPLEMENTED)
 
-	def put(self, request, room_id, track_id):
-		return Response("PUT /api/queues/{room_id}/{track_id}".format(room_id=room_id, track_id=track_id), status=status.HTTP_501_NOT_IMPLEMENTED)
+		# retrieve the requested room from the database
+		try:
+			room = Room.objects.get(pk=room_id)
+		except Room.DoesNotExist:
+			return Response("The room {room} could not be found.".format(room=room_id), status=status.HTTP_404_NOT_FOUND)
+
+		# attempt to retrieve the track from Spotify
+		try:
+			url = "https://api.spotify.com/v1/tracks/{id}".format(id=track_id)
+			response = requests.get(url)
+			response.raise_for_status()
+
+		# pass back the same 4xx status code Spotify gave us if the track ID was bad
+		except requests.HTTPError:
+			return Response("The track ID {id} was rejected by Spotify".format(id=track_id), status=response.status_code)
+
+		# handle communication errors with a somewhat generic message (we don't know if it was us or Spotify)
+		except (requests.ConnectionError, requests.Timeout):
+			return Response("We had some trouble communicating with Spotify", status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+		# parse the response from Spotify, and construct a Track object unless it already exists
+		full_track = response.json()
+		track, newly_created = Track.objects.get_or_create(
+
+			# these are the only things we want to search in our get()
+			room=room,
+			spotify_id=track_id,
+
+			# these will be used in addition to the others during creation of the object
+			defaults={
+				'artist_name': full_track['artists'][0]['name'],
+				'track_name': full_track['name'],
+				'album_name': full_track['album']['name'],
+				'track_length_ms': full_track['duration_ms'],
+			},
+		)
+
+		# serialize the track information and send the response
+		serializer = TrackSerializer(track)
+		return Response(
+			serializer.data,
+			status=status.HTTP_200_OK if newly_created else status.HTTP_409_CONFLICT,
+		)
 
 	def delete(self, request, room_id, track_id):
 		return Response("DELETE /api/queues/{room_id}/{track_id}".format(room_id=room_id, track_id=track_id), status=status.HTTP_501_NOT_IMPLEMENTED)

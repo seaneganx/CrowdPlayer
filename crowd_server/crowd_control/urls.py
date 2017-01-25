@@ -17,5 +17,5 @@ urlpatterns = [
 	url(r'^rooms/{room_param}$'.format(room_param=room_param), views.RoomRequest.as_view()),
 
 	url(r'^queues/{room_param}$'.format(room_param=room_param), views.QueueRead.as_view()),
-	url(r'^queues/{room_param}/{track_param}$'.format(room_param=room_param, track_param=track_param), views.QueueRequest.as_view()),
+	url(r'^queues/{room_param}/{track_param}$'.format(room_param=room_param, track_param=track_param), views.QueueUpdate.as_view()),
 ]
