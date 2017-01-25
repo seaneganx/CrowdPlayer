@@ -75,12 +75,10 @@ class RoomRequest(APIView):
 		except Room.DoesNotExist:
 			return Response("The room {room} could not be found.".format(room=room_id), status=status.HTTP_404_NOT_FOUND)
 
-		# save the room name before we delete, then delete all related data
 		# tracks, voters, and votes that are related to this room all cascade upon room deletion
-		room_name = room.name
 		room.delete()
 
-		return Response("The room {room} and its related data were successfully deleted.".format(room=room_name), status=status.HTTP_200_OK)
+		return Response("The room {room} and its related data were successfully deleted.".format(room=room_id), status=status.HTTP_200_OK)
 
 class QueueRead(APIView):
 
@@ -150,4 +148,18 @@ class QueueUpdate(APIView):
 		)
 
 	def delete(self, request, room_id, track_id):
-		return Response("DELETE /api/queues/{room_id}/{track_id}".format(room_id=room_id, track_id=track_id), status=status.HTTP_501_NOT_IMPLEMENTED)
+
+		# retrieve the requested track from the database
+		try:
+			room = Room.objects.get(pk=room_id)
+			track = room.tracks.get(spotify_id=track_id)
+		except Room.DoesNotExist:
+			return Response("The room {room} could not be found.".format(room=room_id), status=status.HTTP_404_NOT_FOUND)
+		except Track.DoesNotExist:
+			return Response("The track {id} could not be found in {room}.".format(id=track_id, room=room_id), status=status.HTTP_404_NOT_FOUND)
+
+		# votes for this track will cascade upon track deletion
+		track_str = str(track)
+		track.delete()
+
+		return Response("The track {name} and its votes were successfully deleted.".format(name=track_str), status=status.HTTP_200_OK)
