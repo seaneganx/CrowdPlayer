@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db import IntegrityError
 
-from crowd_control.models import Room, Track, TrackVote
+from crowd_control.models import Room, Track, TrackVote, Voter
 from crowd_control.serializers import RoomSerializer, QueueSerializer, TrackSerializer
 from crowd_control.permissions import IsHost, IsHostOrReadOnly
 from rest_framework.permissions import IsAuthenticated
@@ -38,9 +38,16 @@ class RoomCreation(APIView):
 			host=host,
 		)
 
-		# attempt to save the room, handling any exceptions that occur
+		# create a voter profile for the host
+		voter = Voter(
+			user=request.user,
+			room=room,
+		)
+
+		# attempt to save the room and voter, handling any exceptions that occur
 		try:
 			room.save()
+			voter.save()
 		except IntegrityError as e:
 			return Response("{user} is already hosting a room.".format(user=host), status=status.HTTP_400_BAD_REQUEST)
 
