@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Min, Max
+from django.db.models import Sum
 
 from django.utils import timezone
 from django.conf import settings
@@ -103,6 +103,11 @@ class Track(models.Model):
 		'Track Length (ms)',
 	)
 
+	@property
+	def vote_count(self):
+		votes = TrackVote.objects.filter(track=self)
+		return votes.aggregate(Sum('score'))['score__sum'] or 0
+
 	date_added = models.DateTimeField(
 		'Date Added',
 		default=timezone.now,
@@ -112,9 +117,10 @@ class Track(models.Model):
 		unique_together = ('spotify_id', 'room')
 
 	def __str__(self):
-		return "{artist} - {track}".format(
+		return "{artist} - {track} ({votes})".format(
 			artist=self.artist_name,
 			track=self.track_name,
+			votes=self.vote_count,
 		)
 
 class Voter(models.Model):
@@ -151,12 +157,14 @@ class TrackVote(models.Model):
 	# every vote must have a track being voted on
 	track = models.ForeignKey(
 		Track,
+		related_name='votes',
 		on_delete=models.CASCADE,
 	)
 
 	# every vote must have a voter who cast it
 	voter = models.ForeignKey(
 		Voter,
+		related_name='votes',
 		on_delete=models.CASCADE,
 	)
 
