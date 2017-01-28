@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Min, Max
+from django.db.models import Sum
 
 from django.utils import timezone
 from django.conf import settings
@@ -69,28 +69,6 @@ class Room(models.Model):
 		default=timezone.now,
 	)
 
-	def get_next_track(self):
-
-		# there is no next track if there are no tracks in the room
-		tracks = self.tracks
-		if tracks.count() == 0:
-			return None
-
-		# find the tracks with the most votes
-		max_votes = tracks.aggregate(Max('vote_count'))['vote_count__max']
-		top_tracks = tracks.filter(vote_count=max_votes)
-
-		# find the oldest track in the top_tracks queryset
-		min_id = top_tracks.aggregate(Min('id'))['id__min']
-		next_track = top_tracks.get(id = min_id)
-
-		return next_track
-
-	def get_track_queue(self):
-
-		# sort the tracks by vote count, with oldest track ID at the top
-		return self.tracks.order_by('-vote_count', 'id')
-
 	def __str__(self):
 		return self.name
 
@@ -125,10 +103,10 @@ class Track(models.Model):
 		'Track Length (ms)',
 	)
 
-	vote_count = models.IntegerField(
-		'Vote Count',
-		default=0,
-	)
+	@property
+	def vote_count(self):
+		votes = TrackVote.objects.filter(track=self)
+		return votes.aggregate(Sum('score'))['score__sum'] or 0
 
 	date_added = models.DateTimeField(
 		'Date Added',
@@ -137,7 +115,6 @@ class Track(models.Model):
 
 	class Meta:
 		unique_together = ('spotify_id', 'room')
-		ordering = ['-vote_count', 'date_added']
 
 	def __str__(self):
 		return "{artist} - {track} ({votes})".format(
@@ -180,13 +157,21 @@ class TrackVote(models.Model):
 	# every vote must have a track being voted on
 	track = models.ForeignKey(
 		Track,
+		related_name='votes',
 		on_delete=models.CASCADE,
 	)
 
 	# every vote must have a voter who cast it
 	voter = models.ForeignKey(
 		Voter,
+		related_name='votes',
 		on_delete=models.CASCADE,
+	)
+
+	# every vote must have a score
+	score = models.IntegerField(
+		'Score',
+		default=0,
 	)
 
 	# other vote info

@@ -37,69 +37,77 @@ Voters can connect to the room from their favourite mobile browser, then vote on
 ---
 ### API Endpoints
 
+##### Registration
+|  Method  |  Endpoint  |  Usage  |  Permission  |  Returns  |
+| -------- | ---------- | ------- | ------------ |  -------- |
+| POST | /api/register | Register as Host | Anybody | `auth_token` |
+| POST | /api/rooms/`room_id`/register | Join a room | Anybody | `auth_token` |
+
 ##### Rooms
-|  Method  |  Endpoint  | Usage  |  Returns  |
-| -------- | ---------- | ----------- | --------- |
-| POST | /api/rooms/create | Create a room | `room_id` |
-| GET | /api/rooms/`room_id` | Get a room's info | Room |
-| DELETE | /api/rooms/`room_id` | Destroy a room | - |
-| GET | /api/rooms/`room_id`/playing | Get playing track info | Track |
-| GET | /api/rooms/`room_id`/requests | Get list of track requests | Tracks |
+|  Method  |  Endpoint  |  Usage  |  Permission  |  Returns  |
+| -------- | ---------- | ------- | ------------ |  -------- |
+| POST | /api/rooms/create | Create a room | Host | `room_id` |
+| GET | /api/rooms/`room_id` | Get a room's info | Authenticated | Room |
+| DELETE | /api/rooms/`room_id` | Destroy a room | Host | - |
 
 ##### Queues
-|  Method  |  Endpoint  |  Usage  |  Returns  |
-| -------- | ---------- | ------- | --------- |
-| GET | /api/queues/`room_id` | View queue | Tracks |
-| POST | /api/queues/`room_id`/`track_id` | Add/Request a track | - |
-| PUT | /api/queues/`room_id`/`track_id` | Like/Unlike a track | - |
-| DELETE | /api/queues/`room_id`/`track_id` | Remove a track | - |
+|  Method  |  Endpoint  |  Usage  |  Permission  |  Returns  |
+| -------- | ---------- | ------- | ------------ |  -------- |
+| GET | /api/queues/`room_id` | View queue | Authenticated | Tracks |
+| POST | /api/queues/`room_id`/`track_id` | Add a track | Host | Track |
+| DELETE | /api/queues/`room_id`/`track_id` | Remove a track | Host | - |
+| PUT | /api/queues/`room_id`/`track_id`/like | Like a track | Authenticated | Track |
+| PUT | /api/queues/`room_id`/`track_id`/unlike | Unlike a track | Authenticated | Track |
 
 
 ---
 ### Phase One (Basics):
 
-##### 1.1. Web server and API
+##### 1. Web server and API
 - Endpoints to control basic operations of the app
 	- Vote, view room queue, etc.
 - Authentication design for voters and hosts
 	- How can we prevent malicious voters from taking control of the song queue?
 	- How do we verify requests from hosts or voters?
 
-##### 1.2. Song requests
-- Endpoints for voters to request songs in a given room, and for hosts to see requests
-- App must be able to search the entire Spotify library in a reasonable way on the front-end
-- Hosts must be able to reject or approve song requests
+##### 2.1 Android app
+- Basic features only (connect account, manage playlist, vote, etc.)
+- App redesign will happen when the iOS app is made
 
-##### 2.1 Voter website (mobile web app)
-- Make a pretty mobile interface with song listing and a vote button
-- Display current song information
-- Potentially make a song progress slider
-
-##### 2.2 Song request interface
-- Allow users to search for songs in the Spotify library
-	- Search by artist, album, track
-
-##### 3.1. iOS / Android apps
-- Hopefully these can be done in parallel using some fancy mobile app design methods that I clearly haven't researched yet, and may or may not exist
-
-##### 3.2. Custom flow for Spotify OAuth on host devices
+##### 2.2 Custom flow for Spotify OAuth
 - Spotify Android/iOS SDK doesn't receive refresh tokens during the standard OAuth flow
 	- Solution found here: https://github.com/spotify/android-sdk/issues/10
 - I have to send the authorizaton code to the server where I can request an access token together with a refresh token
 - The access token, refresh token, and access token expiry date will be stored in the server database
 - The alternative is having a 3600 second (one hour) expiry on the authorizaton, which requires the host to log into Spotify again (lame) on their phone to refresh the token
 
+##### 3. Voter website (mobile web app)
+- Make a pretty mobile interface with song listing and a vote button
+- Display current song information
+- Potentially make a song progress slider
+
 ### Phase Two (Bonus features)
 
-##### 1. Host user registration
+##### 1. Song requests
+- Endpoints for voters to request songs in a given room, and for hosts to see requests
+- App must be able to search the entire Spotify library in a reasonable way on the front-end
+- Hosts must be able to reject or approve song requests
+- Allow users to search for songs in the Spotify library
+	- Search by artist, album, track
+
+##### 2. Android / iOS App Redesign
+- Create a prettier looking app with more functionality
+- At this point the app can be released into the wild
+
+##### 2. Host user registration
 - Securely verify whether a potential host is a robot (highly unlikely with Google Play / Spotify accounts)
 - Remove required link to Spotify Premium account
 
-##### 2. Personal library support
+##### 3. Personal library support
 - Specific communication with the server regarding the type of song being listed (Spotify vs. Local)
 - Ability to play music files off the host's device rather than Spotify player
 
-##### 3. Customized shared library
+##### 4. Customized shared library
 - Host can whitelist / blacklist songs, artists, and albums
 - Voters will only be able to request songs from the available library
 
