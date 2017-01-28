@@ -10,6 +10,22 @@ from rest_framework.permissions import IsAuthenticated
 
 import random, requests
 
+class HostRegistration(APIView):
+
+	# there are no permissions required to reach the registration views
+	permission_classes = ()
+
+	def post(self, request):
+		return Response(status=status.HTTP_501_NOT_IMPLEMENTED)
+
+class VoterRegistration(APIView):
+
+	# there are no permissions required to reach the registration views
+	permission_classes = ()
+
+	def post(self, request):
+		return Response(status=status.HTTP_501_NOT_IMPLEMENTED)
+
 class RoomCreation(APIView):
 
 	permission_classes = (

@@ -37,6 +37,12 @@ Voters can connect to the room from their favourite mobile browser, then vote on
 ---
 ### API Endpoints
 
+##### Registration
+|  Method  |  Endpoint  |  Usage  |  Permission  |  Returns  |
+| -------- | ---------- | ------- | ------------ |  -------- |
+| POST | /api/register | Register as Host | Anybody | `auth_token` |
+| POST | /api/rooms/`room_id`/register | Join a room | Anybody | `auth_token` |
+
 ##### Rooms
 |  Method  |  Endpoint  |  Usage  |  Permission  |  Returns  |
 | -------- | ---------- | ------- | ------------ |  -------- |
