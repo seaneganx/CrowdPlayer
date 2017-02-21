@@ -7,7 +7,23 @@ It enables hosts to create a playlist based on a selection of music from Spotify
 Voters can connect to the room from their favourite mobile browser, then vote on songs available in the song queue, and even request for songs to be added to the song queue! The song with the highest number of votes at the time of song change will be played next.
 
 ---
-### Project Overview:
+### Here to see a demo of my work?
+If you're here because I linked this in my resume or cover letter to you, great! I'm glad you're taking the time to check out my side projects.
+
+- [Click here](https://github.com/seaneganx/CrowdPlayer/blob/master/crowd_server/crowd_control/models.py) to check out how I organized the Django project models
+	- Each object is mapped to the relational database (MySQL) through Django, but that all happens behind the scenes. I just tell it how things should behave
+	- You can look inside each Python class to see the properties that each object should have, along with their relationships between eachother
+- [Click here](https://github.com/seaneganx/CrowdPlayer/blob/master/crowd_server/crowd_control/views.py) to take a look at the implementation of each API endpoint
+	- Each endpoint is implemented in a View class that works using the Django-Rest-Framework
+	- I carefully planned out the permission classes necessary to separate voters from hosts of rooms, and you can see which views have which permissions
+	- If you want to see which URL would map to which view, you can [click here](https://github.com/seaneganx/CrowdPlayer/blob/master/crowd_server/crowd_control/urls.py) to see the regex mapping
+
+A lot of the time I spent on this project involved me sitting in a Starbucks with an Earl Grey tea reading the Django documentation and playing around with different features of the framework, in addition to planning the project itself. I think the amount of planning I've put into it has paid off in the simplicity of design, and helped me learn a lot about authentication of API users.
+
+Thanks for coming by to take a look!
+
+---
+### Project Overview (Goals)
 
 ##### Host Device (Android / iOS App)
 - Link your Spotify Premium account to play music directly from Spotify!
@@ -35,9 +51,9 @@ Voters can connect to the room from their favourite mobile browser, then vote on
 	- Hosts have much more power, including song addition/removal and song order adjustment
 
 ---
-### API Endpoints
+### API Endpoint Reference
 
-##### Registration
+##### Registration (Incomplete)
 |  Method  |  Endpoint  |  Usage  |  Permission  |  Returns  |
 | -------- | ---------- | ------- | ------------ |  -------- |
 | POST | /api/register | Register as Host | Anybody | `auth_token` |
@@ -61,7 +77,7 @@ Voters can connect to the room from their favourite mobile browser, then vote on
 
 
 ---
-### Phase One (Basics):
+### Minimum Viable Product:
 
 ##### 1. Web server and API
 - Endpoints to control basic operations of the app
@@ -70,23 +86,19 @@ Voters can connect to the room from their favourite mobile browser, then vote on
 	- How can we prevent malicious voters from taking control of the song queue?
 	- How do we verify requests from hosts or voters?
 
-##### 2.1 Android app
+##### 2. Android app
 - Basic features only (connect account, manage playlist, vote, etc.)
 - App redesign will happen when the iOS app is made
-
-##### 2.2 Custom flow for Spotify OAuth
 - Spotify Android/iOS SDK doesn't receive refresh tokens during the standard OAuth flow
 	- Solution found here: https://github.com/spotify/android-sdk/issues/10
-- I have to send the authorizaton code to the server where I can request an access token together with a refresh token
-- The access token, refresh token, and access token expiry date will be stored in the server database
-- The alternative is having a 3600 second (one hour) expiry on the authorizaton, which requires the host to log into Spotify again (lame) on their phone to refresh the token
+	- OAuth flow will have to be redirected through the server in order to request access to a refresh token
 
 ##### 3. Voter website (mobile web app)
 - Make a pretty mobile interface with song listing and a vote button
 - Display current song information
 - Potentially make a song progress slider
 
-### Phase Two (Bonus features)
+### Phase Two (After Release)
 
 ##### 1. Song requests
 - Endpoints for voters to request songs in a given room, and for hosts to see requests
@@ -99,25 +111,23 @@ Voters can connect to the room from their favourite mobile browser, then vote on
 - Create a prettier looking app with more functionality
 - At this point the app can be released into the wild
 
-##### 2. Host user registration
+##### 3. Host user registration
 - Securely verify whether a potential host is a robot (highly unlikely with Google Play / Spotify accounts)
 - Remove required link to Spotify Premium account
 
-##### 3. Personal library support
+##### 4. Personal library support
 - Specific communication with the server regarding the type of song being listed (Spotify vs. Local)
 - Ability to play music files off the host's device rather than Spotify player
 
-##### 4. Customized shared library
+##### 5. Customized shared library
 - Host can whitelist / blacklist songs, artists, and albums
 - Voters will only be able to request songs from the available library
 
 ---
-### Decisions:
+### Decisions
 - How should the front-end be written?
 	- Django templates?
 - Which hosting platform should I use?
-- At what stage should I deploy the app to the public?
-- To advertise, or not to advertise, that is the question: Whether 'tis Nobler in the mind to suffer...
 - How many measures should be put in place to prevent vote spoofing?
 	- Nicknames with host approval? Voter registration (great way to have nobody use the app)
 	- This is the question I'm having the most trouble answering
