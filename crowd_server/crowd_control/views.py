@@ -1,22 +1,94 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.db import IntegrityError
-
-from crowd_control.models import Room, Track, TrackVote, Voter
-from crowd_control.serializers import RoomSerializer, QueueSerializer, TrackSerializer
-from crowd_control.permissions import IsHost, IsHostOrReadOnly
 from rest_framework.permissions import IsAuthenticated
 
+from django.utils import timezone
+from django.conf import settings
+from django.db import IntegrityError
+from django.contrib.auth.models import User
+
+from crowd_control.models import Room, Track, TrackVote, Voter, Host
+from crowd_control.serializers import RoomSerializer, QueueSerializer, TrackSerializer
+from crowd_control.permissions import IsHost, IsHostOrReadOnly
+
 import random, requests
+from base64 import b64encode
+from datetime import timedelta
 
 class HostRegistration(APIView):
 
 	# there are no permissions required to reach the registration views
 	permission_classes = ()
 
-	def post(self, request):
-		return Response(status=status.HTTP_501_NOT_IMPLEMENTED)
+	def get(self, request):
+
+		# get the Spotify auth code from the request
+		auth_code = request.GET.get('code', None)
+		if auth_code is None:
+			return Response(request.GET.get('error', ''), status=status.HTTP_401_UNAUTHORIZED)
+
+		# get access and refresh tokens from Spotify before creating a user
+		try:
+			response = requests.post("https://accounts.spotify.com/api/token",
+			headers = {
+				'Authorization': "Basic " + b64encode("{client_id}:{client_secret}".format(
+					client_id = settings.SPOTIFY_CLIENT_ID,
+					client_secret = settings.SPOTIFY_CLIENT_SECRET,
+				).encode()).decode(),
+			},
+			data = {
+				'grant_type': "authorization_code",
+				'code': auth_code,
+				'redirect_uri': request.build_absolute_uri().split("?")[0], # get the request URI with the query parameters stripped off
+			})
+			response.raise_for_status()
+
+		# pass back the same status code Spotify gave us if the request went bad
+		except requests.HTTPError:
+			return Response(response.json(), status=response.status_code)
+
+		# handle communication errors with a somewhat generic message (we don't know if it was us or Spotify)
+		except (requests.ConnectionError, requests.Timeout):
+			return Response("We had some trouble communicating with Spotify", status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+		# parse the response from Spotify
+		auth_response = response.json()
+
+		# request the user's information from Spotify (we need their username at the very least)
+		try:
+			response = requests.get("https://api.spotify.com/v1/me",
+			headers = {
+				'Authorization': "Bearer {token}".format(token = auth_response['access_token']),
+			})
+			response.raise_for_status()
+
+		# pass back the same status code Spotify gave us if the request went bad
+		except requests.HTTPError:
+			return Response(status=response.status_code)
+
+		# handle communication errors with a somewhat generic message (we don't know if it was us or Spotify)
+		except (requests.ConnectionError, requests.Timeout):
+			return Response("We had some trouble communicating with Spotify", status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+		# parse the user's data into a dictionary
+		info_response = response.json()
+
+		# create a host entry and Django user with the Spotify account information
+		user, created = User.objects.get_or_create(username = info_response['id'])
+
+		if created:
+			Host.objects.create(
+				user = user,
+				spotify_id = info_response['id'],
+				spotify_access_token = auth_response['access_token'],
+				spotify_refresh_token = auth_response['refresh_token'],
+				spotify_access_expiry = timezone.now() + timedelta(seconds = int(auth_response['expires_in'])) - timedelta(minutes = 1),
+			)
+
+		return Response({
+			'access_token': user.auth_token.key,
+		}, status=status.HTTP_200_OK)
 
 class VoterRegistration(APIView):
 
@@ -65,7 +137,7 @@ class RoomCreation(APIView):
 			room.save()
 			voter.save()
 		except IntegrityError as e:
-			return Response("{user} is already hosting a room.".format(user=host), status=status.HTTP_400_BAD_REQUEST)
+			return Response("{user} is already hosting a room.".format(user=host), status=status.HTTP_409_CONFLICT)
 
 		# serialize and return the room data
 		serializer = RoomSerializer(room)
