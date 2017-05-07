@@ -75,16 +75,17 @@ class HostRegistration(APIView):
 		info_response = response.json()
 
 		# create a host entry and Django user with the Spotify account information
-		user, created = User.objects.get_or_create(username = info_response['id'])
+		user, _ = User.objects.get_or_create(username = info_response['id'])
+		Host.objects.update_or_create(
+			spotify_id = info_response['id'],
 
-		if created:
-			Host.objects.create(
-				user = user,
-				spotify_id = info_response['id'],
-				spotify_access_token = auth_response['access_token'],
-				spotify_refresh_token = auth_response['refresh_token'],
-				spotify_access_expiry = timezone.now() + timedelta(seconds = int(auth_response['expires_in'])) - timedelta(minutes = 1),
-			)
+			defaults = {
+				'user': user,
+				'spotify_access_token': auth_response['access_token'],
+				'spotify_refresh_token': auth_response['refresh_token'],
+				'spotify_access_expiry': timezone.now() + timedelta(seconds = int(auth_response['expires_in'])) - timedelta(minutes = 1),
+			}
+		)
 
 		return Response({
 			'access_token': user.auth_token.key,
