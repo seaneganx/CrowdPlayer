@@ -2,17 +2,6 @@ from rest_framework import serializers
 from crowd_control import models
 from django.conf import settings
 
-class RoomSerializer(serializers.ModelSerializer):
-	host = serializers.StringRelatedField()
-
-	class Meta:
-		model = models.Room
-		fields = (
-			'host',
-			'name',
-			'creation_date',
-		)
-
 class TrackSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = models.Track

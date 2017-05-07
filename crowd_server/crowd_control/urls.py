@@ -19,7 +19,6 @@ like_param = "(?P<{param_name}>{like_regex})".format(
 urlpatterns = [
 	url(r'^register$', views.HostRegistration.as_view()),
 
-	url(r'^rooms/create$', views.RoomCreation.as_view()),
 	url(r'^rooms/{room_param}$'.format(room_param=room_param), views.RoomRequest.as_view()),
 	url(r'^rooms/{room_param}/register$'.format(room_param=room_param), views.VoterRegistration.as_view()),
 
