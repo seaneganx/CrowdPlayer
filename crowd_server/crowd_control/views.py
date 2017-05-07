@@ -150,7 +150,10 @@ class RoomRequest(APIView):
 		try:
 			room = Room.objects.get(pk=room_id)
 		except Room.DoesNotExist:
-			return Response("The room {room} could not be found.".format(room=room_id), status=status.HTTP_404_NOT_FOUND)
+			return Response(status=status.HTTP_404_NOT_FOUND)
+
+		# delete the user accounts for all members except the host
+		User.objects.filter(voter__room__name = room_id).exclude(username = request.user.username).delete()
 
 		# tracks, voters, and votes that are related to this room all cascade upon room deletion
 		room.delete()
