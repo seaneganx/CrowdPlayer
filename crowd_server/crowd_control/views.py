@@ -148,20 +148,8 @@ class RoomRequest(APIView):
 
 	permission_classes = (
 		IsAuthenticated,
-		IsHostOrReadOnly,
+		IsHost,
 	)
-
-	def get(self, request, room_id):
-
-		# retrieve the requested room from the database
-		try:
-			room = Room.objects.get(pk=room_id)
-		except Room.DoesNotExist:
-			return Response("The room {room} could not be found.".format(room=room_id), status=status.HTTP_404_NOT_FOUND)
-
-		# serialize the room information and send the response
-		serializer = RoomSerializer(room)
-		return Response(serializer.data, status=status.HTTP_200_OK)
 
 	def delete(self, request, room_id):
 

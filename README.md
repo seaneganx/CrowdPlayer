@@ -63,7 +63,6 @@ Thanks for coming by to take a look!
 |  Method  |  Endpoint  |  Usage  |  Permission  |  Returns  |
 | -------- | ---------- | ------- | ------------ |  -------- |
 | POST | /api/rooms/create | Create a room | Host | `room_id` |
-| GET | /api/rooms/`room_id` | Get a room's info | Authenticated | Room |
 | DELETE | /api/rooms/`room_id` | Destroy a room | Host | - |
 
 ##### Queues
