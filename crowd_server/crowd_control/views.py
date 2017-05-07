@@ -9,7 +9,7 @@ from django.db import IntegrityError
 from django.contrib.auth.models import User
 
 from crowd_control.models import Room, Track, TrackVote, Voter, Host
-from crowd_control.serializers import RoomSerializer, QueueSerializer, TrackSerializer
+from crowd_control.serializers import QueueSerializer, TrackSerializer
 from crowd_control.permissions import IsHost, IsHostOrReadOnly
 
 import random, requests
@@ -26,7 +26,7 @@ class HostRegistration(APIView):
 		# get the Spotify auth code from the request
 		auth_code = request.GET.get('code', None)
 		if auth_code is None:
-			return Response(request.GET.get('error', ''), status=status.HTTP_401_UNAUTHORIZED)
+			return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 		# get access and refresh tokens from Spotify before creating a user
 		try:
@@ -46,11 +46,11 @@ class HostRegistration(APIView):
 
 		# pass back the same status code Spotify gave us if the request went bad
 		except requests.HTTPError:
-			return Response(response.json(), status=response.status_code)
+			return Response(status=response.status_code)
 
 		# handle communication errors with a somewhat generic message (we don't know if it was us or Spotify)
 		except (requests.ConnectionError, requests.Timeout):
-			return Response("We had some trouble communicating with Spotify", status=status.HTTP_503_SERVICE_UNAVAILABLE)
+			return Response(status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 		# parse the response from Spotify
 		auth_response = response.json()
@@ -69,7 +69,7 @@ class HostRegistration(APIView):
 
 		# handle communication errors with a somewhat generic message (we don't know if it was us or Spotify)
 		except (requests.ConnectionError, requests.Timeout):
-			return Response("We had some trouble communicating with Spotify", status=status.HTTP_503_SERVICE_UNAVAILABLE)
+			return Response(status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 		# parse the user's data into a dictionary
 		info_response = response.json()
@@ -155,7 +155,7 @@ class RoomRequest(APIView):
 		# tracks, voters, and votes that are related to this room all cascade upon room deletion
 		room.delete()
 
-		return Response("The room {room} and its related data were successfully deleted.".format(room=room_id), status=status.HTTP_200_OK)
+		return Response(status=status.HTTP_200_OK)
 
 class QueueRead(APIView):
 
@@ -165,7 +165,7 @@ class QueueRead(APIView):
 		try:
 			room = Room.objects.get(pk=room_id)
 		except Room.DoesNotExist:
-			return Response("The room {room} could not be found.".format(room=room_id), status=status.HTTP_404_NOT_FOUND)
+			return Response(status=status.HTTP_404_NOT_FOUND)
 
 		# serialize the track queue and send the response
 		serializer = QueueSerializer(room)
@@ -184,7 +184,7 @@ class QueueUpdate(APIView):
 		try:
 			room = Room.objects.get(pk=room_id)
 		except Room.DoesNotExist:
-			return Response("The room {room} could not be found.".format(room=room_id), status=status.HTTP_404_NOT_FOUND)
+			return Response(status=status.HTTP_404_NOT_FOUND)
 
 		# attempt to retrieve the track from Spotify
 		try:
@@ -194,11 +194,11 @@ class QueueUpdate(APIView):
 
 		# pass back the same 4xx status code Spotify gave us if the track ID was bad
 		except requests.HTTPError:
-			return Response("The track ID {id} was rejected by Spotify".format(id=track_id), status=response.status_code)
+			return Response(status=response.status_code)
 
 		# handle communication errors with a somewhat generic message (we don't know if it was us or Spotify)
 		except (requests.ConnectionError, requests.Timeout):
-			return Response("We had some trouble communicating with Spotify", status=status.HTTP_503_SERVICE_UNAVAILABLE)
+			return Response(status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 		# parse the response from Spotify, and construct a Track object unless it already exists
 		full_track = response.json()
@@ -230,16 +230,15 @@ class QueueUpdate(APIView):
 		try:
 			room = Room.objects.get(pk=room_id)
 			track = room.tracks.get(spotify_id=track_id)
-		except Room.DoesNotExist:
-			return Response("The room {room} could not be found.".format(room=room_id), status=status.HTTP_404_NOT_FOUND)
-		except Track.DoesNotExist:
-			return Response("The track {id} could not be found in {room}.".format(id=track_id, room=room_id), status=status.HTTP_404_NOT_FOUND)
+
+		except (Room.DoesNotExist, Track.DoesNotExist):
+			return Response(status=status.HTTP_404_NOT_FOUND)
 
 		# votes for this track will cascade upon track deletion
 		track_str = str(track)
 		track.delete()
 
-		return Response("The track {name} and its votes were successfully deleted.".format(name=track_str), status=status.HTTP_200_OK)
+		return Response(status=status.HTTP_200_OK)
 
 class QueueVote(APIView):
 
@@ -255,10 +254,9 @@ class QueueVote(APIView):
 		try:
 			room = Room.objects.get(pk=room_id)
 			track = room.tracks.get(spotify_id=track_id)
-		except Room.DoesNotExist:
-			return Response("The room {room} could not be found.".format(room=room_id), status=status.HTTP_404_NOT_FOUND)
-		except Track.DoesNotExist:
-			return Response("The track {id} could not be found in {room}.".format(id=track_id, room=room_id), status=status.HTTP_404_NOT_FOUND)
+
+		except (Room.DoesNotExist, Track.DoesNotExist):
+			return Response(status=status.HTTP_404_NOT_FOUND)
 
 		# create an entry for the vote in the database, otherwise update the existing entry
 		vote, newly_created = TrackVote.objects.update_or_create(
