@@ -57,7 +57,7 @@ Thanks for coming by to take a look!
 |  Method  |  Endpoint  |  Usage  |  Permission  |  Returns  |
 | -------- | ---------- | ------- | ------------ |  -------- |
 | POST | /api/register | Register as Host | Anybody | `auth_token` |
-| POST | /api/rooms/`room_id`/register | Join a room | Anybody | `auth_token` |
+| POST | /api/register/`room_id` | Join a room | Anybody | `auth_token` |
 
 ##### Rooms
 |  Method  |  Endpoint  |  Usage  |  Permission  |  Returns  |
